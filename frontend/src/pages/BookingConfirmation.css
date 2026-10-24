@@ -1,0 +1,268 @@
+.confirmation-page {
+  padding-top: 3rem;
+  padding-bottom: 5rem;
+}
+
+.confirmation-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.success-icon-badge {
+  width: 64px;
+  height: 64px;
+  background: rgba(46, 125, 50, 0.2);
+  border: 2px solid #4CAF50;
+  color: #81C784;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 auto 1.25rem;
+  box-shadow: 0 0 25px rgba(76, 175, 80, 0.4);
+}
+
+.confirmation-heading {
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-subtext {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  max-width: 550px;
+  margin: 0 auto;
+}
+
+/* Ticket Card */
+.ticket-pass-container {
+  max-width: 860px;
+  margin: 0 auto 3rem;
+}
+
+.ticket-card {
+  display: flex;
+  background: #181818;
+  border: 1px solid rgba(242, 239, 232, 0.12);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(198, 40, 40, 0.15);
+}
+
+.ticket-main-col {
+  flex: 1;
+  padding: 2.5rem;
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(242, 239, 232, 0.08);
+  padding-bottom: 1rem;
+}
+
+.ticket-brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #F2EFE8;
+  font-size: 1.1rem;
+}
+
+.ticket-film-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.ticket-poster {
+  width: 100px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+
+.ticket-film-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ticket-movie-title {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+  color: #F2EFE8;
+}
+
+.ticket-theater {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.ticket-time-badge {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ticket-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  background: #131313;
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(242, 239, 232, 0.06);
+}
+
+.spec-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.spec-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-subtle);
+  font-weight: 700;
+}
+
+.spec-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #F2EFE8;
+}
+
+.highlight-seats {
+  color: #F2EFE8;
+  font-size: 1.15rem;
+}
+
+/* Stub Column */
+.ticket-stub-col {
+  width: 250px;
+  background: #1F1F1F;
+  border-left: 2px dashed rgba(242, 239, 232, 0.15);
+  padding: 2.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.stub-notch {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: var(--bg-primary);
+  border-radius: 50%;
+  left: -12px;
+}
+
+.stub-notch.top {
+  top: -12px;
+}
+
+.stub-notch.bottom {
+  bottom: -12px;
+}
+
+.stub-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--text-subtle);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.stub-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5rem;
+  background: rgba(198, 40, 40, 0.1);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid rgba(198, 40, 40, 0.3);
+}
+
+.stub-barcode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.barcode-lines {
+  width: 140px;
+  height: 48px;
+  background: repeating-linear-gradient(
+    90deg,
+    #F2EFE8 0px,
+    #F2EFE8 2px,
+    transparent 2px,
+    transparent 5px,
+    #F2EFE8 5px,
+    #F2EFE8 9px,
+    transparent 9px,
+    transparent 12px
+  );
+  margin-bottom: 0.4rem;
+}
+
+.barcode-num {
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--text-subtle);
+}
+
+.stub-note {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  line-height: 1.35;
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .ticket-card {
+    flex-direction: column;
+  }
+  .ticket-stub-col {
+    width: 100%;
+    border-left: none;
+    border-top: 2px dashed rgba(242, 239, 232, 0.15);
+  }
+  .stub-notch.top {
+    left: auto;
+    top: -12px;
+    right: 30px;
+  }
+  .stub-notch.bottom {
+    left: auto;
+    bottom: auto;
+    top: -12px;
+    left: 30px;
+  }
+  .ticket-specs-grid {
+    grid-template-columns: 1fr;
+  }
+}

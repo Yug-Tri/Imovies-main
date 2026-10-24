@@ -1,0 +1,235 @@
+.movie-detail-page {
+  padding-bottom: 5rem;
+}
+
+.detail-hero {
+  position: relative;
+  background-size: cover;
+  background-position: center 25%;
+  padding: 4rem 0 5rem;
+  border-bottom: 1px solid rgba(242, 239, 232, 0.08);
+  margin-bottom: 3.5rem;
+}
+
+.detail-hero-container {
+  display: flex;
+  gap: 3.5rem;
+  align-items: flex-start;
+}
+
+.detail-poster-col {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.detail-poster {
+  width: 100%;
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(198, 40, 40, 0.2);
+  border: 1px solid rgba(242, 239, 232, 0.15);
+}
+
+.detail-info-col {
+  flex: 1;
+}
+
+.detail-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detail-title {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  margin-bottom: 1.25rem;
+  color: #F2EFE8;
+}
+
+.detail-meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.meta-label {
+  color: var(--text-subtle);
+  font-weight: 500;
+  margin-right: 0.35rem;
+}
+
+.detail-synopsis {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #D5D2CA;
+  margin-bottom: 1.75rem;
+  max-width: 800px;
+}
+
+.detail-cast-block {
+  margin-bottom: 2rem;
+}
+
+.cast-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.cast-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: #C5C2BA;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.detail-cta-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.wishlist-toggle-btn.active {
+  background: rgba(198, 40, 40, 0.2);
+  border-color: var(--accent);
+  color: #FFCDD2;
+}
+
+/* Showtimes section */
+.showtimes-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 3rem;
+}
+
+.showtimes-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(242, 239, 232, 0.08);
+  padding-bottom: 1rem;
+}
+
+.date-filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.date-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-pill:hover {
+  color: var(--text-main);
+  border-color: rgba(242, 239, 232, 0.25);
+}
+
+.date-pill.active {
+  background: var(--accent);
+  color: #FFF;
+  border-color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.showtimes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.showtime-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 2rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.showtime-card:hover {
+  border-color: rgba(198, 40, 40, 0.4);
+  transform: translateY(-2px);
+}
+
+.st-theater-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.st-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.st-seats-avail {
+  color: #81C784;
+}
+
+.st-booking-action {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.st-price-tag {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #F2EFE8;
+}
+
+.st-select-btn {
+  padding: 0.65rem 1.4rem;
+  font-size: 0.9rem;
+}
+
+.no-showtimes-box {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 868px) {
+  .detail-hero-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .detail-tag-row, .detail-meta-list, .detail-cta-row, .cast-pills {
+    justify-content: center;
+  }
+  .detail-title {
+    font-size: 2.5rem;
+  }
+  .showtime-card {
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+  .st-booking-action {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

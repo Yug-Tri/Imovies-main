@@ -1,0 +1,48 @@
+.wishlist-page {
+  padding-top: 3rem;
+  padding-bottom: 5rem;
+}
+
+.wishlist-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.wishlist-title {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.wishlist-desc {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+}
+
+.empty-wishlist-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 4.5rem 2rem;
+  text-align: center;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.empty-heart-icon {
+  font-size: 4rem;
+  color: var(--accent);
+  opacity: 0.5;
+  margin-bottom: 1.25rem;
+}
+
+.empty-wishlist-box h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.empty-wishlist-box p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}

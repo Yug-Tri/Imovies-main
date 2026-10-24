@@ -37,6 +37,6 @@ coverage/
 
 # Misc
 # Track lockfiles (npm/yarn)
-# package-lock.json
-# yarn.lock
+!package-lock.json
+!yarn.lock
 *.tgz

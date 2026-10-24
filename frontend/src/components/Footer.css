@@ -1,0 +1,130 @@
+.cinematic-footer {
+  background-color: #101010;
+  border-top: 1px solid rgba(242, 239, 232, 0.08);
+  color: #A09E97;
+  padding: 4rem 2rem 2rem;
+  margin-top: 5rem;
+}
+
+.footer-content {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  gap: 3rem;
+}
+
+.footer-brand {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.8rem;
+  color: #F2EFE8;
+  margin-bottom: 1rem;
+}
+
+.footer-brand span {
+  color: #C62828;
+}
+
+.footer-desc {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  color: #8C8A83;
+}
+
+.footer-badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  background: rgba(198, 40, 40, 0.15);
+  border: 1px solid rgba(198, 40, 40, 0.3);
+  color: #F2EFE8;
+  font-size: 0.78rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.footer-col h3 {
+  color: #F2EFE8;
+  font-size: 1.05rem;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-col a {
+  color: #A09E97;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.footer-col a:hover {
+  color: #F2EFE8;
+}
+
+.format-tag {
+  display: inline-block;
+  background: #191919;
+  border: 1px solid rgba(242, 239, 232, 0.1);
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #C5C2BA;
+}
+
+.demo-notice {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #807E78;
+  margin-bottom: 1rem;
+}
+
+.server-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #4CAF50;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #4CAF50;
+}
+
+.footer-bottom {
+  max-width: 1240px;
+  margin: 3rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(242, 239, 232, 0.05);
+  text-align: center;
+  font-size: 0.82rem;
+  color: #6E6D68;
+}
+
+@media (max-width: 900px) {
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+  }
+}
