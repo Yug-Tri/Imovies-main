@@ -1,0 +1,122 @@
+graph TB
+%% iMovies System Architecture Diagram
+%% Palette: #101010 (BG), #191919 (Surface), #C62828 (Accent Red), #F2EFE8 (Off-White Text)
+
+    subgraph CLIENT_LAYER ["Client Presentation Layer (Browser Runtime)"]
+        UserBrowser["Patron Browser<br/>(Desktop / Mobile)"]
+        AdminBrowser["Studio Admin Browser<br/>(Management Console)"]
+    end
+
+    subgraph DEV_TOOLING ["Development-Time Tooling (Not in Prod Runtime)"]
+        ViteDev["Vite Dev Server (Port 5173)<br/>HMR & ESBuild Pipeline"]
+        ViteProxy["Vite Dev Proxy<br/>/api -> http://localhost:5000"]
+        JestRunner["Jest Test Runner (Supertest)<br/>In-Memory MongoDB (MongoMemoryServer)"]
+    end
+
+    subgraph FRONTEND_SPA ["React 18 Single Page Application (Vite Bundled)"]
+        Router["React Router v6<br/>(/, /movies, /showtimes, /dashboard, /admin)"]
+        AuthCtx["AuthContext<br/>(State: user, loading, session checks)"]
+        Pages["React View Pages<br/>Home, Movies, MovieDetail, SeatSelection, Dashboard, Admin"]
+        ApiClient["apiFetch Client Module<br/>(Fetch with credentials: 'include')"]
+    end
+
+    subgraph BACKEND_SERVER ["Express.js API Server Runtime (Node.js Port 5000)"]
+        Entry["Server Entrypoint<br/>(backend/src/index.js)"]
+
+        subgraph MIDDLEWARE_LAYER ["Middleware & Guard Pipeline"]
+            CorsMw["CORS Middleware<br/>(credentials: true, origin whitelist)"]
+            CookieMw["Cookie Parser<br/>(Extracts HTTP-only JWT token)"]
+            RateLimitMw["express-rate-limit<br/>(100 req / 15m on /api/auth)"]
+            AuthMw["JWT Auth Middleware<br/>(Token verification, req.user payload)"]
+            RoleMw["requireRole Guard<br/>(Admin authorization check)"]
+            ErrorMw["Centralized Error Handler<br/>(Sanitized HTTP responses)"]
+        end
+
+        subgraph CONTROLLER_LAYER ["Controllers & Business Logic"]
+            AuthCtrl["authController<br/>(register, login, logout, profile)"]
+            MovieCtrl["movieController<br/>(search, filter, CRUD, cascade delete)"]
+            WishCtrl["wishlistController<br/>(get, add, remove movie bookmarks)"]
+            ShowtimeCtrl["showtimeController<br/>(schedule, seat matrix generator)"]
+            BookingCtrl["bookingController<br/>(atomic seat reservation, cancellation)"]
+            AdminCtrl["adminController<br/>(box office metrics, cinema CRUD)"]
+        end
+    end
+
+    subgraph DATABASE_LAYER ["Persistence Layer (MongoDB Database via Mongoose ODM)"]
+        MongoConn["Mongoose Connection Pool<br/>(mongodb://localhost:27017/imovies)"]
+        
+        subgraph COLLECTIONS ["MongoDB Collections"]
+            UserCol[("Users Collection<br/>- email, passwordHash, role, wishlist[]")]
+            MovieCol[("Movies Collection<br/>- title, genre, rating, duration, isFeatured")]
+            CinemaCol[("Cinemas Collection<br/>- name, location")]
+            ScreenCol[("Screens Collection<br/>- cinemaId, rows, cols (Model scaffold)")]
+            ShowtimeCol[("Showtimes Collection<br/>- movie, cinema, startTime, embedded seats[]")]
+            BookingCol[("Bookings Collection<br/>- ref, user, movie, showtime, seats[], status")]
+        end
+    end
+
+    subgraph EXTERNAL_SERVICES ["External Content Services"]
+        UnsplashCDN["Unsplash Media CDN<br/>(Movie Posters & Backdrops)"]
+        YouTube["YouTube Video Embeds<br/>(Official Trailers)"]
+    end
+
+    %% Client Interactions
+    UserBrowser -->|"Loads SPA Assets"| FRONTEND_SPA
+    AdminBrowser -->|"Loads Admin Console"| FRONTEND_SPA
+    UserBrowser -.->|"Stream Images"| UnsplashCDN
+    UserBrowser -.->|"Stream Trailers"| YouTube
+
+    %% Development tooling relations
+    ViteDev -.->|"Serves JSX/CSS during Dev"| FRONTEND_SPA
+    ViteDev -->|"Proxies /api calls"| ViteProxy
+    ViteProxy -.->|"HTTP Requests"| Entry
+    JestRunner -.->|"Integration testing"| Entry
+
+    %% Frontend Internal flow
+    Router --> Pages
+    Pages --> AuthCtx
+    Pages --> ApiClient
+    ApiClient -->|"REST API Calls with Cookie"| Entry
+
+    %% Backend pipeline flow
+    Entry --> CorsMw
+    CorsMw --> CookieMw
+    CookieMw --> RateLimitMw
+    RateLimitMw --> AuthMw
+    AuthMw --> RoleMw
+    RoleMw --> CONTROLLER_LAYER
+    CONTROLLER_LAYER --> ErrorMw
+
+    %% Controller to Database mapping
+    AuthCtrl --> UserCol
+    MovieCtrl --> MovieCol
+    MovieCtrl --> ShowtimeCol
+    WishCtrl --> UserCol
+    WishCtrl --> MovieCol
+    ShowtimeCtrl --> ShowtimeCol
+    ShowtimeCtrl --> MovieCol
+    ShowtimeCtrl --> CinemaCol
+    BookingCtrl -->|"Atomic findOneAndUpdate"| ShowtimeCol
+    BookingCtrl -->|"Insert / Update"| BookingCol
+    AdminCtrl --> UserCol
+    AdminCtrl --> BookingCol
+    AdminCtrl --> MovieCol
+    AdminCtrl --> CinemaCol
+
+    Entry --> MongoConn
+    MongoConn --> COLLECTIONS
+
+    %% Styling classes
+    classDef clientStyle fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef frontendStyle fill:#191919,stroke:#888888,stroke-width:2px,color:#F2EFE8;
+    classDef backendStyle fill:#1A1A1A,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef dbStyle fill:#141414,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef devStyle fill:#222222,stroke:#555555,stroke-dasharray: 5 5,color:#A09E97;
+    classDef extStyle fill:#1A1A1A,stroke:#333333,color:#A09E97;
+
+    class UserBrowser,AdminBrowser clientStyle;
+    class Router,AuthCtx,Pages,ApiClient frontendStyle;
+    class Entry,CorsMw,CookieMw,RateLimitMw,AuthMw,RoleMw,ErrorMw,AuthCtrl,MovieCtrl,WishCtrl,ShowtimeCtrl,BookingCtrl,AdminCtrl backendStyle;
+    class MongoConn,UserCol,MovieCol,CinemaCol,ScreenCol,ShowtimeCol,BookingCol dbStyle;
+    class ViteDev,ViteProxy,JestRunner devStyle;
+    class UnsplashCDN,YouTube extStyle;

@@ -1,0 +1,75 @@
+graph TD
+%% iMovies Application User Journey Flowchart
+%% Accurately representing frontend router paths, state logic, and backend response branches
+
+    Start([Patron Opens iMovies Web App]) --> HomeView["Visit Home Page (/)<br/>Hero Premiere Banner & Now Showing Carousel"]
+
+    HomeView --> BrowseChoice{Explore Screenings}
+    BrowseChoice -->|"Click 'Browse All Movies' or Navbar"| MovieCatalogue["Catalogue Page (/movies)<br/>Browse full cinema repertory"]
+    BrowseChoice -->|"Click 'Book Tickets Now' on Hero"| MovieDetail["Movie Detail Page (/movies/:id)<br/>Synopsis, Trailer, Cast, & Showtimes"]
+
+    MovieCatalogue --> SearchFilter["Apply Search & Filters<br/>- Live text input (title, director)<br/>- Genre pills (Sci-Fi, Action...)<br/>- Sort dropdown (Rating, Latest)"]
+    SearchFilter --> SelectMovie["Click Movie Card"]
+    SelectMovie --> MovieDetail
+
+    MovieDetail --> WishlistAction{"Click 'Add to Wishlist'"}
+    WishlistAction -->|Authenticated| ToggleWish["POST/DELETE /api/wishlist/:id<br/>Updates user.wishlist in MongoDB"]
+    WishlistAction -->|Unauthenticated| AuthRedirectWish["Redirect to /login<br/>Sign in or create account"]
+
+    MovieDetail --> ShowtimeSelect["Select Screening Date & Time<br/>Date filter pills & Auditorium cards"]
+    ShowtimeSelect --> SeatMap["Seat Selection Page (/showtimes/:id/seats)<br/>Load interactive curved auditorium layout"]
+
+    SeatMap --> PickSeats["Select Desired Seats (Max 8 seats)<br/>Real-time subtotal calculation"]
+    PickSeats --> ClickReserve["Click 'Confirm Seats' Button"]
+
+    ClickReserve --> CheckAuth{"Is User Authenticated?<br/>(AuthContext user state)"}
+
+    CheckAuth -->|No| StorePending["Save {showtimeId, seats} to localStorage<br/>('pending_booking')"]
+    StorePending --> LoginPage["Redirect to /login?redirect=/showtimes/:id/seats"]
+    LoginPage --> AuthChoice{Has Account?}
+    AuthChoice -->|Yes| DoLogin["Enter Email & Password<br/>or 1-Click Demo Login"]
+    AuthChoice -->|No| DoRegister["Register New Account (/register)"]
+    DoLogin --> AuthSuccess["JWT Stored in HTTP-only Cookie"]
+    DoRegister --> AuthSuccess
+    AuthSuccess --> RestorePending["Restore pending_booking from localStorage<br/>Redirect back to SeatSelection"]
+    RestorePending --> PickSeats
+
+    CheckAuth -->|Yes| SubmitBooking["POST /api/bookings<br/>Payload: { showtimeId, seats: ['A1', 'A2'] }"]
+
+    SubmitBooking --> BackendValidate{"Backend Seat Availability Check<br/>Atomic findOneAndUpdate"}
+
+    BackendValidate -->|409 Conflict: Seat Reserved by Other| SeatConflict["Show Error Banner:<br/>'One or more selected seats were reserved just now'"]
+    SeatConflict --> RefreshSeats["Auto re-fetch showtime grid<br/>Reset selected seats"]
+    RefreshSeats --> PickSeats
+
+    BackendValidate -->|400 Bad Request| ShowError["Display Validation Error Message"]
+    ShowError --> PickSeats
+
+    BackendValidate -->|201 Created: Reservation Confirmed| SuccessConf["Clear pending_booking from localStorage<br/>Navigate to /booking/confirmation/:id"]
+
+    SuccessConf --> ViewTicket["Boarding Pass Ticket View<br/>Display Booking Reference, Barcode, & Details"]
+    ViewTicket --> PrintPass["Click 'Print / Save Pass' (window.print)"]
+    ViewTicket --> GoDashboard["Click 'View in Dashboard'"]
+
+    GoDashboard --> DashboardPage["Member Dashboard (/dashboard)<br/>Fetch GET /api/bookings/my-bookings"]
+
+    DashboardPage --> ViewHistory["View All Past & Active Reservations"]
+    ViewHistory --> CancelPrompt{"Patron Clicks 'Cancel Reservation'"}
+    CancelPrompt -->|Confirm Prompt = Yes| SendCancel["POST /api/bookings/:id/cancel"]
+    CancelPrompt -->|Confirm Prompt = No| KeepBooking["No Action Taken"]
+
+    SendCancel --> ReleaseSeats["Showtime seats released (isBooked: false)<br/>Booking status set to 'cancelled'"]
+    ReleaseSeats --> UpdateDashState["Update UI in place<br/>Display 'Cancelled' pill on booking"]
+
+    UpdateDashState --> EndJourney([Patron Journey Complete])
+    PrintPass --> EndJourney
+
+    classDef pageStyle fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef decisionStyle fill:#2A1818,stroke:#E53935,stroke-width:1.5px,color:#F2EFE8;
+    classDef actionStyle fill:#191919,stroke:#666666,stroke-width:1.5px,color:#F2EFE8;
+    classDef terminalStyle fill:#101010,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+
+    class HomeView,MovieCatalogue,MovieDetail,SeatMap,LoginPage,ViewTicket,DashboardPage pageStyle;
+    class BrowseChoice,WishlistAction,CheckAuth,AuthChoice,BackendValidate,CancelPrompt decisionStyle;
+    class SearchFilter,SelectMovie,ToggleWish,AuthRedirectWish,ShowtimeSelect,PickSeats,ClickReserve,StorePending,DoLogin,DoRegister,AuthSuccess,RestorePending,SubmitBooking,SeatConflict,RefreshSeats,ShowError,SuccessConf,PrintPass,GoDashboard,ViewHistory,SendCancel,ReleaseSeats,UpdateDashState,KeepBooking actionStyle;
+    class Start,EndJourney terminalStyle;

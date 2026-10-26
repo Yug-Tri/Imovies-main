@@ -1,0 +1,91 @@
+graph TB
+%% iMovies Data Flow Diagram - Level 1
+%% Palette: #101010, #191919, #C62828, #F2EFE8
+
+    subgraph ENTITIES ["External Entities"]
+        Patron["Cinema Patron"]
+        Admin["Studio Administrator"]
+    end
+
+    subgraph PROCESSES ["Application Processes"]
+        P1(("1.0<br/>Authentication &<br/>Identity Management"))
+        P2(("2.0<br/>Movie Catalogue<br/>& Search Engine"))
+        P3(("3.0<br/>Showtime & Seating<br/>Grid Generation"))
+        P4(("4.0<br/>Atomic Reservation<br/>& Concurrency Guard"))
+        P5(("5.0<br/>Booking Archive &<br/>Cancellation Engine"))
+        P6(("6.0<br/>Studio Analytics &<br/>Venue Management"))
+    end
+
+    subgraph DATA_STORES ["Data Stores (MongoDB Collections)"]
+        D1[("D1: Users & Wishlist Store")]
+        D2[("D2: Movies Catalogue Store")]
+        D3[("D3: Cinemas Store")]
+        D4[("D4: Showtimes & Embedded Seats")]
+        D5[("D5: Bookings Archive")]
+    end
+
+    %% Process 1.0 Auth
+    Patron -->|"Register / Login credentials"| P1
+    P1 -->|"Read user & verify password"| D1
+    P1 -->|"Write new user & passwordHash"| D1
+    P1 -->|"HTTP-only JWT cookie"| Patron
+    Patron -->|"Bookmark movie"| P1
+    P1 -->|"Update user.wishlist[]"| D1
+
+    %% Process 2.0 Movies
+    Patron -->|"Search query & genre filters"| P2
+    P2 -->|"Query movies (regex search, sort)"| D2
+    D2 -->|"Matched movie documents"| P2
+    P2 -->|"Filtered movie listings & details"| Patron
+    Admin -->|"Create / update / delete movie"| P2
+    P2 -->|"Insert / update / remove movie"| D2
+    P2 -.->|"Cascade delete showtimes"| D4
+
+    %% Process 3.0 Showtimes
+    Patron -->|"Request showtimes for movie"| P3
+    P3 -->|"Fetch showtimes by movieId"| D4
+    D4 -->|"Showtime & seat status list"| P3
+    P3 -->|"Screening schedule & seat layout"| Patron
+    Admin -->|"Schedule showtime (rows, cols, price, time)"| P3
+    P3 -->|"Fetch movie & cinema info"| D2
+    P3 -->|"Fetch cinema info"| D3
+    P3 -->|"Save showtime with generated seat matrix"| D4
+
+    %% Process 4.0 Reservation
+    Patron -->|"Reserve seats { showtimeId, seats[] }"| P4
+    P4 -->|"Pre-check seat validity"| D4
+    P4 -->|"Atomic findOneAndUpdate with arrayFilters"| D4
+    D4 -->|"Updated showtime OR null (conflict)"| P4
+    P4 -->|"409 Conflict: Seats taken"| Patron
+    P4 -->|"Reservation success trigger"| P5
+
+    %% Process 5.0 Bookings
+    P5 -->|"Persist booking with IM-ref"| D5
+    D5 -->|"Booking record"| P5
+    P5 -->|"Confirmed boarding pass & ref"| Patron
+    Patron -->|"Request my-bookings"| P5
+    P5 -->|"Read patron bookings"| D5
+    D5 -->|"Active & cancelled bookings"| P5
+    P5 -->|"Booking history list"| Patron
+    Patron -->|"Cancel reservation"| P5
+    P5 -->|"Set status = 'cancelled'"| D5
+    P5 -->|"Release seats (isBooked: false)"| D4
+
+    %% Process 6.0 Admin Management
+    Admin -->|"Request studio dashboard stats"| P6
+    P6 -->|"Count documents & calculate revenue"| D5
+    P6 -->|"Count movies, showtimes, users, cinemas"| D1
+    P6 -->|"Count movies"| D2
+    P6 -->|"Count cinemas"| D3
+    P6 -->|"Count showtimes"| D4
+    P6 -->|"Return box office revenue & recent bookings"| Admin
+    Admin -->|"Add / remove cinema venues"| P6
+    P6 -->|"Insert / delete cinema"| D3
+
+    classDef entityStyle fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef processStyle fill:#2A1414,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef storeStyle fill:#141414,stroke:#888888,stroke-width:2px,color:#F2EFE8;
+
+    class Patron,Admin entityStyle;
+    class P1,P2,P3,P4,P5,P6 processStyle;
+    class D1,D2,D3,D4,D5 storeStyle;

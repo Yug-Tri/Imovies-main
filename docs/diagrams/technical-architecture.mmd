@@ -1,0 +1,171 @@
+graph LR
+%% iMovies Technical Architecture Diagram
+%% Real modules, filenames, routes, and connections
+
+    subgraph FRONTEND_SRC ["frontend/src/"]
+        MainJsx["main.jsx<br/>(DOM Root)"]
+        AppJsx["App.jsx<br/>(App Layout & Routes)"]
+        ApiJs["api.js<br/>(apiFetch wrapper)"]
+        AuthContext["context/AuthContext.jsx<br/>(AuthProvider & useAuth)"]
+
+        subgraph COMPONENTS ["components/"]
+            Navbar["Navbar.jsx / .css"]
+            MovieCard["MovieCard.jsx / .css"]
+            Footer["Footer.jsx / .css"]
+        end
+
+        subgraph PAGES ["pages/"]
+            HomePg["Home.jsx / .css"]
+            MoviesPg["Movies.jsx / .css"]
+            DetailPg["MovieDetail.jsx / .css"]
+            SeatPg["SeatSelection.jsx / .css"]
+            ConfirmPg["BookingConfirmation.jsx / .css"]
+            WishPg["Wishlist.jsx / .css"]
+            DashPg["Dashboard.jsx / .css"]
+            AdminPg["AdminDashboard.jsx / .css"]
+            AuthPgs["Login.jsx / Register.jsx"]
+        end
+    end
+
+    subgraph BACKEND_SRC ["backend/src/"]
+        IndexJs["index.js<br/>(Express App, Port 5000)"]
+        DbJs["config/db.js<br/>(connectDB)"]
+        LoggerJs["utils/logger.js<br/>(info, error, warn)"]
+
+        subgraph MIDDLEWARE ["middleware/"]
+            AuthMid["auth.js<br/>(JWT verify)"]
+            RoleMid["requireRole.js<br/>(role guard)"]
+            RateMid["rateLimiter.js<br/>(express-rate-limit)"]
+            ErrorMid["errorHandler.js<br/>(central error)"]
+        end
+
+        subgraph ROUTES ["routes/"]
+            AuthRt["routes/authRoutes.js<br/>/api/auth/*"]
+            MovieRt["routes/movieRoutes.js<br/>/api/movies/*"]
+            WishRt["routes/wishlistRoutes.js<br/>/api/wishlist/*"]
+            ShowtimeRt["routes/showtimeRoutes.js<br/>/api/showtimes/*"]
+            BookingRt["routes/bookingRoutes.js<br/>/api/bookings/*"]
+            AdminRt["routes/adminRoutes.js<br/>/api/admin/*"]
+        end
+
+        subgraph CONTROLLERS ["controllers/"]
+            AuthCtl["controllers/authController.js"]
+            MovieCtl["controllers/movieController.js"]
+            WishCtl["controllers/wishlistController.js"]
+            ShowtimeCtl["controllers/showtimeController.js"]
+            BookingCtl["controllers/bookingController.js"]
+            AdminCtl["controllers/adminController.js"]
+        end
+
+        subgraph MODELS ["models/"]
+            UserMod["models/User.js"]
+            MovieMod["models/Movie.js"]
+            CinemaMod["models/Cinema.js"]
+            ScreenMod["models/Screen.js"]
+            ShowtimeMod["models/Showtime.js"]
+            BookingMod["models/Booking.js"]
+        end
+    end
+
+    subgraph SCRIPTS_TESTS ["backend/scripts/ & tests/"]
+        SeedJs["scripts/seed.js"]
+        AuthTest["tests/auth.test.js"]
+        BookingTest["tests/booking.test.js"]
+    end
+
+    subgraph MONGODB_INSTANCE ["MongoDB (imovies db)"]
+        DB_Users[("users")]
+        DB_Movies[("movies")]
+        DB_Cinemas[("cinemas")]
+        DB_Screens[("screens")]
+        DB_Showtimes[("showtimes")]
+        DB_Bookings[("bookings")]
+    end
+
+    %% Frontend connections
+    MainJsx --> AppJsx
+    AppJsx --> AuthContext
+    AppJsx --> Navbar
+    AppJsx --> Footer
+    AppJsx --> PAGES
+    PAGES --> ApiJs
+    PAGES --> AuthContext
+    HomePg --> MovieCard
+    MoviesPg --> MovieCard
+    WishPg --> MovieCard
+
+    %% Network Connection
+    ApiJs -->|"HTTP (JSON + Cookie)"| IndexJs
+
+    %% Backend Routing
+    IndexJs --> DbJs
+    IndexJs --> AuthRt
+    IndexJs --> MovieRt
+    IndexJs --> WishRt
+    IndexJs --> ShowtimeRt
+    IndexJs --> BookingRt
+    IndexJs --> AdminRt
+    IndexJs --> ErrorMid
+
+    %% Route to Middleware & Controllers
+    AuthRt --> RateMid
+    AuthRt --> AuthCtl
+    AuthRt -.->|"profile"| AuthMid
+
+    MovieRt --> MovieCtl
+    MovieRt -.->|"admin post/put/delete"| AuthMid
+    MovieRt -.->|"admin post/put/delete"| RoleMid
+
+    WishRt --> AuthMid
+    WishRt --> WishCtl
+
+    ShowtimeRt --> ShowtimeCtl
+    ShowtimeRt -.->|"admin post/delete"| AuthMid
+    ShowtimeRt -.->|"admin post/delete"| RoleMid
+
+    BookingRt --> AuthMid
+    BookingRt --> BookingCtl
+
+    AdminRt --> AuthMid
+    AdminRt --> RoleMid
+    AdminRt --> AdminCtl
+
+    %% Controller to Model relationships
+    AuthCtl --> UserMod
+    MovieCtl --> MovieMod
+    MovieCtl --> ShowtimeMod
+    WishCtl --> UserMod
+    ShowtimeCtl --> ShowtimeMod
+    ShowtimeCtl --> MovieMod
+    BookingCtl --> ShowtimeMod
+    BookingCtl --> BookingMod
+    BookingCtl --> MovieMod
+    AdminCtl --> MovieMod
+    AdminCtl --> BookingMod
+    AdminCtl --> ShowtimeMod
+    AdminCtl --> UserMod
+    AdminCtl --> CinemaMod
+
+    %% Model to Mongo Collections
+    UserMod --> DB_Users
+    MovieMod --> DB_Movies
+    CinemaMod --> DB_Cinemas
+    ScreenMod --> DB_Screens
+    ShowtimeMod --> DB_Showtimes
+    BookingMod --> DB_Bookings
+
+    %% Scripts and Tests
+    SeedJs --> UserMod
+    SeedJs --> MovieMod
+    SeedJs --> CinemaMod
+    SeedJs --> ShowtimeMod
+    AuthTest --> IndexJs
+    BookingTest --> IndexJs
+
+    classDef feStyle fill:#1E1E1E,stroke:#888888,stroke-width:1.5px,color:#F2EFE8;
+    classDef beStyle fill:#1A1A1A,stroke:#C62828,stroke-width:1.5px,color:#F2EFE8;
+    classDef dbStyle fill:#121212,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+
+    class MainJsx,AppJsx,ApiJs,AuthContext,Navbar,MovieCard,Footer,HomePg,MoviesPg,DetailPg,SeatPg,ConfirmPg,WishPg,DashPg,AdminPg,AuthPgs feStyle;
+    class IndexJs,DbJs,LoggerJs,AuthMid,RoleMid,RateMid,ErrorMid,AuthRt,MovieRt,WishRt,ShowtimeRt,BookingRt,AdminRt,AuthCtl,MovieCtl,WishCtl,ShowtimeCtl,BookingCtl,AdminCtl,UserMod,MovieMod,CinemaMod,ScreenMod,ShowtimeMod,BookingMod beStyle;
+    class DB_Users,DB_Movies,DB_Cinemas,DB_Screens,DB_Showtimes,DB_Bookings dbStyle;

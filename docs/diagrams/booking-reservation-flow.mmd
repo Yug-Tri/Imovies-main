@@ -1,0 +1,88 @@
+sequenceDiagram
+    autonumber
+    %% iMovies Booking and Concurrency-Safe Seat Reservation Flow
+    %% Based on actual controllers/bookingController.js implementation
+
+    actor Patron as Cinema Patron
+    participant UI as React UI (SeatSelection.jsx)
+    participant Auth as Auth Middleware (auth.js)
+    participant Ctrl as Booking Controller (bookingController.js)
+    participant ShowtimeModel as Mongoose Showtime Model
+    participant BookingModel as Mongoose Booking Model
+    participant MongoDB as MongoDB Engine (Replica / Server)
+
+    Note over Patron,MongoDB: Phase 1: Auditorium Seat Map Retrieval
+    Patron->>UI: Clicks "Select Seats" for a Showtime
+    UI->>Ctrl: GET /api/showtimes/:id
+    Ctrl->>ShowtimeModel: findById(id).populate('movie').populate('cinema').lean()
+    ShowtimeModel->>MongoDB: Query showtime document with embedded seats[]
+    MongoDB-->>ShowtimeModel: Return showtime data
+    ShowtimeModel-->>Ctrl: Showtime object
+    Ctrl-->>UI: 200 OK: { showtime: { seats: [...], movie, theater, price } }
+    UI-->>Patron: Renders curved auditorium screen & seat grid
+
+    Note over Patron,MongoDB: Phase 2: Interactive Seat Selection & Booking Submission
+    Patron->>UI: Selects seats (e.g. ['A1', 'A2']) & clicks "Confirm Seats"
+    UI->>UI: Verifies selection <= 8 seats & checks auth token
+    UI->>Auth: POST /api/bookings with credentials: 'include'<br/>Body: { showtimeId, seats: ['A1', 'A2'] }
+    Auth->>Auth: Verifies JWT token from req.cookies.token
+    alt JWT Missing or Expired
+        Auth-->>UI: 401 Unauthorized { error: 'Unauthenticated' }
+        UI-->>Patron: Redirects to /login (saves pending_booking)
+    else JWT Valid
+        Auth->>Ctrl: Forwards request with req.user = { id, email, role }
+    end
+
+    Note over Ctrl,MongoDB: Phase 3: Server Validation & Atomic Concurrency Guard
+    Ctrl->>Ctrl: Validate payload: showtimeId exists & Array.isArray(seats) && seats.length > 0
+    Ctrl->>ShowtimeModel: findById(showtimeId).populate('movie')
+    ShowtimeModel->>MongoDB: Fetch current document
+    MongoDB-->>ShowtimeModel: Showtime document
+    ShowtimeModel-->>Ctrl: Showtime instance
+
+    Ctrl->>Ctrl: Verify all requested seats exist in showtime layout
+    Ctrl->>Ctrl: Pre-check: verify none of requested seats have isBooked === true
+
+    Note over Ctrl,MongoDB: CRITICAL ATOMIC STEP: Single-Document Atomic Update
+    Ctrl->>ShowtimeModel: findOneAndUpdate({ _id: showtimeId, seats: { $not: { $elemMatch: { seatNumber: { $in: seats }, isBooked: true } } } }, { $set: { seats.$[elem].isBooked: true, seats.$[elem].bookedBy: userId } }, { arrayFilters: [...] })
+    ShowtimeModel->>MongoDB: Atomic write query with arrayFilters
+
+    alt Race Condition: Another Patron Booked A1 or A2 milliseconds earlier
+        MongoDB-->>ShowtimeModel: Returns null (document query condition failed)
+        ShowtimeModel-->>Ctrl: null
+        Ctrl-->>UI: 409 Conflict: { error: 'One or more selected seats were reserved just now...' }
+        UI->>Ctrl: Auto re-fetch GET /api/showtimes/:id
+        Ctrl-->>UI: Fresh seat map with A1/A2 marked red
+        UI-->>Patron: Displays conflict warning & updates grid
+    else Atomic Lock Acquired: Seats Successfully Reserved
+        MongoDB-->>ShowtimeModel: Returns updated Showtime document
+        ShowtimeModel-->>Ctrl: updatedShowtime
+
+        Note over Ctrl,MongoDB: Phase 4: Booking Document Persistence
+        Ctrl->>Ctrl: Generate unique bookingReference ('IM-' + 6 chars)
+        Ctrl->>BookingModel: findOne({ bookingReference })
+        BookingModel->>MongoDB: Check uniqueness
+        MongoDB-->>BookingModel: null (unique)
+        Ctrl->>BookingModel: new Booking({ bookingReference, user, movie, showtime, seats, totalAmount, status: 'confirmed' }).save()
+        BookingModel->>MongoDB: Insert into 'bookings' collection
+        MongoDB-->>BookingModel: Saved Booking Document
+        BookingModel-->>Ctrl: Confirmed Booking Object
+        Ctrl-->>UI: 201 Created: { message: 'Booking confirmed', booking }
+        UI-->>Patron: Navigates to /booking/confirmation/:id (Boarding Pass)
+    end
+
+    Note over Patron,MongoDB: Phase 5: Cancellation & Seat Release Flow
+    Patron->>UI: Clicks "Cancel Reservation" in Dashboard
+    UI->>Ctrl: POST /api/bookings/:id/cancel
+    Ctrl->>BookingModel: findOne({ _id: req.params.id, user: req.user.id })
+    BookingModel->>MongoDB: Find booking
+    MongoDB-->>BookingModel: Booking document
+    BookingModel-->>Ctrl: booking
+    Ctrl->>ShowtimeModel: updateOne({ _id: booking.showtime }, { $set: { seats.$[elem].isBooked: false, seats.$[elem].bookedBy: null } }, { arrayFilters: [...] })
+    ShowtimeModel->>MongoDB: Release seats in embedded array
+    MongoDB-->>ShowtimeModel: update acknowledge
+    Ctrl->>BookingModel: booking.status = 'cancelled' and booking.save()
+    BookingModel->>MongoDB: Update booking status to 'cancelled'
+    MongoDB-->>BookingModel: Saved
+    Ctrl-->>UI: 200 OK: { message: 'Booking cancelled and seats released' }
+    UI-->>Patron: Displays success alert & updates pass to 'Cancelled'

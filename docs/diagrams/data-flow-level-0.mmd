@@ -1,0 +1,48 @@
+graph LR
+%% iMovies Data Flow Diagram - Level 0 (Context Diagram)
+%% Palette: #101010, #191919, #C62828, #F2EFE8
+
+    subgraph EXTERNAL_ENTITIES ["External Entities"]
+        Patron["Cinema Patron<br/>(Guest / Registered User)"]
+        Admin["Studio Administrator<br/>(Executive / Manager)"]
+        MediaCDN["Media Content Hosts<br/>(Unsplash & YouTube)"]
+    end
+
+    subgraph SYSTEM_BOUNDARY ["System Boundary"]
+        SystemProcess(("0.0<br/>iMovies Cinema<br/>Discovery & Ticket<br/>Booking System"))
+    end
+
+    %% Patron interactions
+    Patron -->|"Search filters & movie queries"| SystemProcess
+    Patron -->|"Credentials (email, password)"| SystemProcess
+    Patron -->|"Seat reservation requests (seats, showtimeId)"| SystemProcess
+    Patron -->|"Booking cancellation requests"| SystemProcess
+    Patron -->|"Wishlist additions/removals"| SystemProcess
+
+    SystemProcess -->|"Movie catalogue & synopsis listings"| Patron
+    SystemProcess -->|"Screening schedules & real-time seat maps"| Patron
+    SystemProcess -->|"JWT authentication cookie"| Patron
+    SystemProcess -->|"Confirmed booking ticket pass & ref"| Patron
+    SystemProcess -->|"Personal booking history & wishlist"| Patron
+
+    %% Admin interactions
+    Admin -->|"Admin credentials & role validation"| SystemProcess
+    Admin -->|"New movie details (title, cast, posterUrl)"| SystemProcess
+    Admin -->|"Movie deletion requests"| SystemProcess
+    Admin -->|"New showtime & seat grid dimensions (rows, cols)"| SystemProcess
+    Admin -->|"New cinema venue records"| SystemProcess
+
+    SystemProcess -->|"Box office statistics & revenue metrics"| Admin
+    SystemProcess -->|"Global cinema catalogue listings"| Admin
+    SystemProcess -->|"Audit list of recent patron bookings"| Admin
+
+    %% External media interactions
+    MediaCDN -->|"Poster & backdrop image binaries"| Patron
+    MediaCDN -->|"Embedded trailer video stream"| Patron
+    SystemProcess -.->|"Stores asset URLs"| MediaCDN
+
+    classDef entityStyle fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef processStyle fill:#2A1414,stroke:#C62828,stroke-width:3px,color:#F2EFE8;
+
+    class Patron,Admin,MediaCDN entityStyle;
+    class SystemProcess processStyle;

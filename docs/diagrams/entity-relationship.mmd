@@ -1,0 +1,96 @@
+erDiagram
+    %% iMovies Entity-Relationship Diagram (ERD)
+    %% Accurately reflecting actual Mongoose models, embedded documents, and referenced relationships
+
+    USER {
+        ObjectId _id PK "Primary Key"
+        string email UK "Unique, lowercased, trimmed"
+        string name "User display name"
+        string role "'user' | 'admin' default 'user'"
+        string passwordHash "Bcrypt hashed password"
+        ObjectId[] wishlist "Array of Movie ObjectIds (references)"
+        date createdAt "Timestamp"
+        date updatedAt "Timestamp"
+    }
+
+    MOVIE {
+        ObjectId _id PK "Primary Key"
+        string title "Required movie title"
+        string description "Plot synopsis"
+        string[] genre "Array of genres e.g. Sci-Fi, Drama"
+        number rating "Audience score (0.0 - 10.0)"
+        string posterUrl "URL to poster image"
+        string backdropUrl "URL to widescreen hero backdrop"
+        number duration "Runtime in minutes (default 120)"
+        string releaseDate "Theatrical release date string"
+        string director "Director name"
+        string[] cast "Array of principal cast members"
+        string trailerUrl "YouTube trailer video URL"
+        boolean isFeatured "Hero section spotlight flag"
+        string externalId "Optional external identifier"
+        date createdAt "Timestamp"
+        date updatedAt "Timestamp"
+    }
+
+    CINEMA {
+        ObjectId _id PK "Primary Key"
+        string name "Required cinema complex name"
+        string location "Address / city text"
+        date createdAt "Timestamp"
+        date updatedAt "Timestamp"
+    }
+
+    SCREEN {
+        ObjectId _id PK "Primary Key"
+        ObjectId cinemaId FK "References Cinema._id"
+        string name "Screen designation e.g. Screen 1"
+        number rows "Row count for layout"
+        number cols "Column count per row"
+        date createdAt "Timestamp"
+        date updatedAt "Timestamp"
+    }
+
+    SHOWTIME {
+        ObjectId _id PK "Primary Key"
+        ObjectId movie FK "References Movie._id (Required)"
+        ObjectId cinema FK "References Cinema._id (Optional)"
+        string theater "Auditorium name e.g. IMAX Hall 1"
+        string format "Format default 'IMAX 4K'"
+        number price "Base ticket price default 15.00"
+        date startTime "Scheduled screening timestamp"
+        date createdAt "Timestamp"
+        date updatedAt "Timestamp"
+    }
+
+    SEAT_SUBDOCUMENT {
+        string seatNumber "Alphanumeric code e.g. 'A1', 'C4'"
+        string row "Row letter e.g. 'A'"
+        number col "Seat column integer"
+        boolean isBooked "Status flag (default false)"
+        ObjectId bookedBy FK "References User._id (Nullable)"
+        number price "Seat ticket price"
+    }
+
+    BOOKING {
+        ObjectId _id PK "Primary Key"
+        string bookingReference UK "Unique code e.g. 'IM-839201'"
+        ObjectId user FK "References User._id (Required)"
+        ObjectId movie FK "References Movie._id (Required)"
+        ObjectId showtime FK "References Showtime._id (Required)"
+        string[] seats "Array of reserved seat codes e.g. ['A1', 'A2']"
+        number totalAmount "Total reservation price"
+        string status "'confirmed' | 'cancelled'"
+        date createdAt "Timestamp"
+        date updatedAt "Timestamp"
+    }
+
+    %% Relationships
+    CINEMA ||--o{ SCREEN : "contains (model scaffold)"
+    CINEMA ||--o{ SHOWTIME : "hosts screening"
+    MOVIE ||--o{ SHOWTIME : "is screened at"
+    SHOWTIME ||--|{ SEAT_SUBDOCUMENT : "embeds array of seats"
+    USER ||--o{ BOOKING : "places reservation"
+    SHOWTIME ||--o{ BOOKING : "reserved in"
+    MOVIE ||--o{ BOOKING : "booked for film"
+    USER ||--o{ SEAT_SUBDOCUMENT : "reserves seat (bookedBy)"
+    USER }o--o{ MOVIE : "bookmarks in wishlist[]"

@@ -1,0 +1,140 @@
+graph TB
+%% iMovies Backend Architecture Pattern: Layered Route-Controller-Model with Pipeline Middleware
+%% Distinct from traditional server-side MVC: Headless REST API with decoupled React client
+
+    subgraph INBOUND ["1. Inbound HTTP Client Request"]
+        Req["HTTP Request<br/>(Method, URI, JSON Body, HTTP-only Cookie)"]
+    end
+
+    subgraph GLOBAL_PIPELINE ["2. Global Middleware Pipeline (backend/src/index.js)"]
+        Cors["cors()<br/>Origin whitelist & credentials: true"]
+        CookieParser["cookie-parser()<br/>Parses 'token' cookie into req.cookies"]
+        JsonParser["express.json()<br/>Parses body into req.body"]
+    end
+
+    subgraph ROUTER_DISPATCHER ["3. Routing Layer (backend/src/routes/)"]
+        AuthRouter["authRoutes.js<br/>/api/auth"]
+        MovieRouter["movieRoutes.js<br/>/api/movies"]
+        WishlistRouter["wishlistRoutes.js<br/>/api/wishlist"]
+        ShowtimeRouter["showtimeRoutes.js<br/>/api/showtimes"]
+        BookingRouter["bookingRoutes.js<br/>/api/bookings"]
+        AdminRouter["adminRoutes.js<br/>/api/admin"]
+    end
+
+    subgraph ROUTE_MIDDLEWARE ["4. Route-Level Guards & Validation Filters"]
+        RateLimit["rateLimiter.js<br/>100 requests / 15m window"]
+        Validator["express-validator<br/>body('email').isEmail(), body('password')"]
+        AuthMid["auth.js<br/>jwt.verify(cookie) -> req.user"]
+        RoleGuard["requireRole('admin')<br/>Checks req.user.role === 'admin'"]
+    end
+
+    subgraph CONTROLLER_LAYER ["5. Controller / Business Logic Layer (backend/src/controllers/)"]
+        subgraph CONTROLLERS ["(No separate service layer; controllers hold business logic)"]
+            AuthCtrl["authController.js<br/>setPassword, validatePassword, setTokenCookie"]
+            MovieCtrl["movieController.js<br/>Regex search, genre filter, cascade showtime delete"]
+            WishlistCtrl["wishlistController.js<br/>Wishlist array push/filter on User"]
+            ShowtimeCtrl["showtimeController.js<br/>generateSeats matrix (rows x cols)"]
+            BookingCtrl["bookingController.js<br/>Atomic findOneAndUpdate, generateReference"]
+            AdminCtrl["adminController.js<br/>Aggregate counts & totalRevenue calculation"]
+        end
+    end
+
+    subgraph MODEL_LAYER ["6. Object-Document Modeling Layer (backend/src/models/)"]
+        UserModel["User.js<br/>Schema + setPassword/validatePassword"]
+        MovieModel["Movie.js<br/>Schema + genre[], cast[], rating"]
+        CinemaModel["Cinema.js<br/>Schema: name, location"]
+        ScreenModel["Screen.js<br/>Schema: cinemaId, rows, cols (Unused in routes)"]
+        ShowtimeModel["Showtime.js<br/>Schema: movie, cinema, embedded seats[]"]
+        BookingModel["Booking.js<br/>Schema: ref, user, movie, showtime, seats[]"]
+    end
+
+    subgraph PERSISTENCE_LAYER ["7. Persistence Layer (MongoDB Database)"]
+        MongoDB[("MongoDB Database<br/>mongodb://localhost:27017/imovies<br/>Collections: users, movies, cinemas, screens, showtimes, bookings")]
+    end
+
+    subgraph OUTBOUND_RESPONSE ["8. Response & Error Handling"]
+        SuccessResp["JSON HTTP Response<br/>200 OK / 201 Created"]
+        ErrorMw["errorHandler.js<br/>next(err) -> 400 / 401 / 403 / 404 / 409 / 500"]
+    end
+
+    %% Flow lines
+    Req --> Cors
+    Cors --> CookieParser
+    CookieParser --> JsonParser
+
+    JsonParser --> AuthRouter
+    JsonParser --> MovieRouter
+    JsonParser --> WishlistRouter
+    JsonParser --> ShowtimeRouter
+    JsonParser --> BookingRouter
+    JsonParser --> AdminRouter
+
+    AuthRouter --> RateLimit
+    RateLimit --> Validator
+    Validator --> AuthCtrl
+    AuthRouter -.->|"profile"| AuthMid
+    AuthMid -.-> AuthCtrl
+
+    MovieRouter --> MovieCtrl
+    MovieRouter -.->|"create/update/delete"| AuthMid
+    AuthMid -.-> RoleGuard
+    RoleGuard -.-> MovieCtrl
+
+    WishlistRouter --> AuthMid
+    AuthMid --> WishlistCtrl
+
+    ShowtimeRouter --> ShowtimeCtrl
+    ShowtimeRouter -.->|"create/delete"| AuthMid
+
+    BookingRouter --> AuthMid
+    AuthMid --> BookingCtrl
+
+    AdminRouter --> AuthMid
+    AuthMid --> RoleGuard
+    RoleGuard --> AdminCtrl
+
+    %% Controller to Model
+    AuthCtrl --> UserModel
+    MovieCtrl --> MovieModel
+    MovieCtrl --> ShowtimeModel
+    WishlistCtrl --> UserModel
+    ShowtimeCtrl --> ShowtimeModel
+    ShowtimeCtrl --> MovieModel
+    BookingCtrl --> ShowtimeModel
+    BookingCtrl --> BookingModel
+    AdminCtrl --> MovieModel
+    AdminCtrl --> BookingModel
+    AdminCtrl --> ShowtimeModel
+    AdminCtrl --> UserModel
+    AdminCtrl --> CinemaModel
+
+    %% Models to MongoDB
+    UserModel --> MongoDB
+    MovieModel --> MongoDB
+    CinemaModel --> MongoDB
+    ScreenModel -.-> MongoDB
+    ShowtimeModel --> MongoDB
+    BookingModel --> MongoDB
+
+    %% Response
+    CONTROLLER_LAYER --> SuccessResp
+    CONTROLLER_LAYER -.->|"next(err)"| ErrorMw
+    ErrorMw -->|"Error JSON"| OutboundErr["HTTP Error Envelope"]
+
+    classDef reqStyle fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef pipeStyle fill:#191919,stroke:#666666,stroke-width:1.5px,color:#F2EFE8;
+    classDef routeStyle fill:#201818,stroke:#C62828,stroke-width:1.5px,color:#F2EFE8;
+    classDef guardStyle fill:#242424,stroke:#E53935,stroke-width:1.5px,color:#F2EFE8;
+    classDef ctrlStyle fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef modelStyle fill:#191919,stroke:#888888,stroke-width:1.5px,color:#F2EFE8;
+    classDef dbStyle fill:#101010,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef errStyle fill:#2A1414,stroke:#E53935,stroke-width:1.5px,color:#F2EFE8;
+
+    class Req reqStyle;
+    class Cors,CookieParser,JsonParser pipeStyle;
+    class AuthRouter,MovieRouter,WishlistRouter,ShowtimeRouter,BookingRouter,AdminRouter routeStyle;
+    class RateLimit,Validator,AuthMid,RoleGuard guardStyle;
+    class AuthCtrl,MovieCtrl,WishlistCtrl,ShowtimeCtrl,BookingCtrl,AdminCtrl ctrlStyle;
+    class UserModel,MovieModel,CinemaModel,ScreenModel,ShowtimeModel,BookingModel modelStyle;
+    class MongoDB dbStyle;
+    class SuccessResp,ErrorMw,OutboundErr errStyle;

@@ -1,0 +1,95 @@
+graph LR
+%% iMovies Use-Case Diagram
+%% Palette: #101010, #191919, #C62828, #F2EFE8
+
+    subgraph ACTORS ["System Actors"]
+        Guest["👤 Guest<br/>(Unauthenticated Patron)"]
+        User["👤 Registered Patron<br/>(Authenticated Member)"]
+        Admin["👑 Studio Administrator<br/>(Admin Role)"]
+    end
+
+    subgraph GUEST_USECASES ["Public / Guest Capabilities"]
+        UC_Browse(["Browse Movie Catalogue"])
+        UC_Search(["Search by Title & Director"])
+        UC_Genre(["Filter Movies by Genre"])
+        UC_Sort(["Sort by Rating or Release"])
+        UC_Detail(["View Synopsis, Cast & Trailer"])
+        UC_Showtimes(["View Screening Schedules"])
+        UC_SeatMap(["Inspect Auditorium Seat Grid"])
+        UC_Register(["Register New Account"])
+        UC_Login(["Sign In (Password or Demo)"])
+    end
+
+    subgraph USER_USECASES ["Registered Patron Capabilities"]
+        UC_WishToggle(["Bookmark / Unbookmark Wishlist"])
+        UC_WishView(["View Personal Wishlist Vault"])
+        UC_BookSeats(["Select & Reserve Seats (Max 8)"])
+        UC_Ticket(["View Boarding Pass Ticket"])
+        UC_Print(["Print / Save Ticket Pass"])
+        UC_History(["View Booking History Dashboard"])
+        UC_Cancel(["Cancel Reservation & Free Seats"])
+        UC_Logout(["Sign Out of Session"])
+    end
+
+    subgraph ADMIN_USECASES ["Studio Administrator Capabilities"]
+        UC_Stats(["View Box Office & Revenue Metrics"])
+        UC_Audit(["Audit Recent Patron Bookings"])
+        UC_AddMovie(["Add New Film to Catalogue"])
+        UC_DelMovie(["Delete Film (Cascade Showtimes)"])
+        UC_AddShowtime(["Schedule Showtime & Generate Seats"])
+        UC_DelShowtime(["Delete Scheduled Showtime"])
+        UC_AddCinema(["Create Cinema Complex Record"])
+        UC_DelCinema(["Delete Cinema Complex Record"])
+    end
+
+    %% Actor Inherent Hierarchy
+    User -.->|"inherits all"| Guest
+    Admin -.->|"inherits all"| User
+
+    %% Guest associations
+    Guest --> UC_Browse
+    Guest --> UC_Search
+    Guest --> UC_Genre
+    Guest --> UC_Sort
+    Guest --> UC_Detail
+    Guest --> UC_Showtimes
+    Guest --> UC_SeatMap
+    Guest --> UC_Register
+    Guest --> UC_Login
+
+    %% User associations
+    User --> UC_WishToggle
+    User --> UC_WishView
+    User --> UC_BookSeats
+    User --> UC_Ticket
+    User --> UC_Print
+    User --> UC_History
+    User --> UC_Cancel
+    User --> UC_Logout
+
+    %% Admin associations
+    Admin --> UC_Stats
+    Admin --> UC_Audit
+    Admin --> UC_AddMovie
+    Admin --> UC_DelMovie
+    Admin --> UC_AddShowtime
+    Admin --> UC_DelShowtime
+    Admin --> UC_AddCinema
+    Admin --> UC_DelCinema
+
+    %% Dependencies between use cases
+    UC_BookSeats -.->|"<<include>>"| UC_SeatMap
+    UC_BookSeats -.->|"<<include>>"| UC_Login
+    UC_BookSeats -.->|"<<extend>>"| UC_Ticket
+    UC_Cancel -.->|"<<extend>>"| UC_History
+    UC_DelMovie -.->|"<<include>>"| UC_DelShowtime
+
+    classDef guestActor fill:#1E1E1E,stroke:#888888,stroke-width:2px,color:#F2EFE8;
+    classDef userActor fill:#1E1E1E,stroke:#C62828,stroke-width:2px,color:#F2EFE8;
+    classDef adminActor fill:#2A1414,stroke:#E53935,stroke-width:2px,color:#F2EFE8;
+    classDef ucStyle fill:#191919,stroke:#C62828,stroke-width:1.5px,color:#F2EFE8;
+
+    class Guest guestActor;
+    class User userActor;
+    class Admin adminActor;
+    class UC_Browse,UC_Search,UC_Genre,UC_Sort,UC_Detail,UC_Showtimes,UC_SeatMap,UC_Register,UC_Login,UC_WishToggle,UC_WishView,UC_BookSeats,UC_Ticket,UC_Print,UC_History,UC_Cancel,UC_Logout,UC_Stats,UC_Audit,UC_AddMovie,UC_DelMovie,UC_AddShowtime,UC_DelShowtime,UC_AddCinema,UC_DelCinema ucStyle;
