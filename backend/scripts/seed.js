@@ -1,3 +1,13 @@
+const path = require('path');
+const fs = require('fs');
+
+const envPath = path.join(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+} else {
+  require('dotenv').config();
+}
+
 const mongoose = require('mongoose');
 const Movie = require('../src/models/Movie');
 const Showtime = require('../src/models/Showtime');
