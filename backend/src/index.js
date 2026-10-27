@@ -47,7 +47,24 @@ app.use('/api/showtimes', showtimeRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check endpoint
+// Root and health check endpoints
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'iMovies API',
+    message: 'iMovies API is running successfully',
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'iMovies API',
+    message: 'iMovies API is running successfully',
+  });
+});
+
+app.get('/health', (req, res) => res.json({ status: 'ok', service: 'iMovies API' }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'iMovies API' }));
 
 // Error handling middleware
