@@ -7,6 +7,13 @@ if (fs.existsSync(envPath)) {
 } else {
   require('dotenv').config();
 }
+const dns = require('dns');
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
 
 const mongoose = require('mongoose');
 const Movie = require('../src/models/Movie');
@@ -170,7 +177,7 @@ function buildSeatGrid(rows = 6, cols = 8, price = 16.00) {
 }
 
 async function seed() {
-  console.log('Connecting to MongoDB at:', MONGODB_URI);
+  console.log('Connecting to MongoDB...');
   await mongoose.connect(MONGODB_URI);
   console.log('Connected! Purging and reseeding...');
 
