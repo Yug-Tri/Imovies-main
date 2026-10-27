@@ -1,4 +1,9 @@
-const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+let rawBase = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+rawBase = rawBase.trim();
+if (rawBase && !rawBase.startsWith('http://') && !rawBase.startsWith('https://') && !rawBase.startsWith('/')) {
+  rawBase = `https://${rawBase}`;
+}
+const API_BASE = rawBase;
 
 export async function apiFetch(path, options = {}) {
   const url = `${API_BASE}${path}`;

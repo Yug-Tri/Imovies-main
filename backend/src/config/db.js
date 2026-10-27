@@ -26,7 +26,9 @@ const connectDB = async () => {
         throw new Error('MONGODB_URI environment variable is missing in Vercel project settings');
       }
     }
-    const finalUri = uri || 'mongodb://localhost:27017/imovies';
+    let finalUri = uri || 'mongodb://localhost:27017/imovies';
+    // Auto-strip placeholder angle brackets around password if present (e.g. :<password>@)
+    finalUri = finalUri.replace(/:<([^>]+)>@/, ':$1@');
     cachedPromise = mongoose.connect(finalUri, {
       serverSelectionTimeoutMS: 5000,
       maxPoolSize: 10,
